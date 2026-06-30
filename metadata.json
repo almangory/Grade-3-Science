@@ -1,0 +1,8 @@
+{
+  "name": "Remix: العلوم - الصف الثالث الابتدائي",
+  "description": "موقع تعليمي تفاعلي لمنهج العلوم للصف السادس الابتدائي بجمهورية السودان يحتوي على شروحات مبسطة، تجارب ومحاكيات تفاعلية، وأقسام أسئلة ذكية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Custom RTL-friendly animations and adjustments */
+html {
+  font-family: var(--font-sans);
+  direction: rtl;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Print adjustments for A4 sheets */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 12mm 12mm 12mm !important;
+  }
+  
+  /* Reset body and html layout for clean absolute canvas printing */
+  html, body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 11pt !important;
+  }
+
+  /* Remove outer flexbox/grid layout and constraints from standard wrapper containers */
+  #root, #app-viewport, main, #worksheet-generator-viewport, #worksheet-workspace-grid {
+    display: block !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Hide all non-printable components like banners, widgets, and sidebars */
+  #app-viewport > div:not(#worksheet-generator-viewport),
+  #app-viewport > header,
+  #app-viewport > footer,
+  body > iframe,
+  nav,
+  aside,
+  button,
+  .bg-slate-50,
+  #btn-chat-toggle,
+  #btn-worksheets-toggle,
+  #bento-worksheets-cell,
+  #worksheet-generator-viewport > div:first-child,
+  #worksheet-generator-viewport > div:nth-child(2),
+  #online-exam-workspace,
+  #worksheet-print-alert,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  /* Hide the left sidebar/control panel of the generator */
+  #worksheet-workspace-grid > section:first-child {
+    display: none !important;
+  }
+
+  /* Force worksheet list preview column to span full page width as standard block layout */
+  #worksheet-workspace-grid > section:last-child {
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+  }
+
+  /* Completely reset scroll containers background colors, borders, and shadows */
+  #worksheet-pages-scroll-container {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    box-shadow: none !important;
+  }
+
+  /* Strict, clean A4 single sheet definitions */
+  .a4-page {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    padding: 0 0 12mm 0 !important;
+    display: block !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  /* Override inner absolute heights to allow standard document flow on paper */
+  .a4-page > div {
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
+  }
+
+  /* Seamlessly force paper switch between page gaps */
+  .a4-page:not(:first-child) {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  /* Avoid page breaks inside individual question card outlines */
+  .a4-page .space-y-3 {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
