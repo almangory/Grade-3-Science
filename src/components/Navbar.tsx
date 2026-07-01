@@ -50,18 +50,19 @@ export default function Navbar({
     if ('wakeLock' in navigator) {
       try {
         if (wakeLockRef.current) {
-          await wakeLockRef.current.release();
+          await wakeLockRef.current.release().catch(() => {});
           wakeLockRef.current = null;
         }
         wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
         setWakeLockActive(true);
-        console.log('[Wake Lock] Screen Wake Lock is active');
+        console.log('[Wake Lock] Screen Wake Lock successfully activated and locked 💡');
         
         wakeLockRef.current.addEventListener('release', () => {
           setWakeLockActive(false);
+          console.log('[Wake Lock] Screen Wake Lock was released');
         });
       } catch (err) {
-        console.warn('[Wake Lock] Could not request screen wake lock:', err);
+        console.warn('[Wake Lock] Could not request screen wake lock yet:', err);
         setWakeLockActive(false);
       }
     }
@@ -89,7 +90,7 @@ export default function Navbar({
     }
   }, [wakeLockEnabled]);
 
-  // Effect to handle visibility changes (re-acquire if tab was hidden and is visible again)
+  // Handle visibility changes (re-acquire if tab was hidden and is visible again)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && wakeLockEnabled) {
@@ -102,6 +103,35 @@ export default function Navbar({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [wakeLockEnabled]);
+
+  // Aggressive User Interaction Trigger (Crucial for Mobiles & Tablets)
+  // Since mobile browsers strictly require a user gesture to grant Screen Wake Lock,
+  // we listen to any click, tap, scroll, or touch anywhere on the page to automatically trigger/activate it.
+  useEffect(() => {
+    if (!wakeLockEnabled) return;
+
+    const triggerWakeLockOnInteraction = () => {
+      if (wakeLockEnabled && !wakeLockActive) {
+        requestWakeLock();
+      }
+    };
+
+    // Listen to touchstart, pointerdown, click, scroll
+    window.addEventListener('touchstart', triggerWakeLockOnInteraction, { passive: true });
+    window.addEventListener('pointerdown', triggerWakeLockOnInteraction, { passive: true });
+    window.addEventListener('click', triggerWakeLockOnInteraction, { passive: true });
+    window.addEventListener('scroll', triggerWakeLockOnInteraction, { passive: true });
+
+    // Try once initially
+    requestWakeLock();
+
+    return () => {
+      window.removeEventListener('touchstart', triggerWakeLockOnInteraction);
+      window.removeEventListener('pointerdown', triggerWakeLockOnInteraction);
+      window.removeEventListener('click', triggerWakeLockOnInteraction);
+      window.removeEventListener('scroll', triggerWakeLockOnInteraction);
+    };
+  }, [wakeLockEnabled, wakeLockActive]);
 
   // Cleanup on unmount
   useEffect(() => {
