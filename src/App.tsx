@@ -13,6 +13,7 @@ import { getTodayChallenge } from './data/dailyChallenges';
 import DailyChallengeModal from './components/DailyChallengeModal';
 import StudentLogin from './components/StudentLogin';
 import StudentChat from './components/StudentChat';
+import CartoonResearcher from './components/CartoonResearcher';
 
 // Default initial state for student progresses
 const defaultProgress: UserProgress = {
@@ -323,6 +324,9 @@ export default function App() {
         isOpen={chatOpen} 
         onClose={() => setChatOpen(false)} 
       />
+
+      {/* 5. Animated Cartoon Quick Science Researcher */}
+      <CartoonResearcher />
 
 
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Sparkles, Trophy, Star, GraduationCap, Volume2, VolumeX, MessageSquare, Settings, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Trophy, Star, GraduationCap, Volume2, VolumeX, MessageSquare, Settings, Eye, EyeOff, Wifi, WifiOff } from 'lucide-react';
 import { UserProgress } from '../types';
 import { isMuted, setMuted } from '../utils/audio';
 
@@ -24,6 +24,20 @@ export default function Navbar({
 }: NavbarProps) {
   const [muted, setMutedState] = useState(isMuted());
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleToggleMute = () => {
     const nextMuted = !muted;
@@ -45,8 +59,15 @@ export default function Navbar({
         <div className="flex items-center gap-1.5 py-0.5">
           <span className="text-sm">🎒</span>
           <span className="text-[10px] sm:text-xs font-black text-slate-700">العلوم تفاعلي 🇸🇩</span>
-          <span className="text-[9px] bg-indigo-50 border border-indigo-150 text-indigo-700 px-1.5 py-0.5 rounded-lg font-black">⭐ {progress.stars}</span>
+          {isOffline ? (
+            <span className="text-[8px] bg-emerald-55 border border-emerald-250 text-emerald-800 px-1 rounded-sm font-black animate-pulse flex items-center gap-0.5">
+              <WifiOff className="h-2 w-2" /> أوفلاين 📡
+            </span>
+          ) : (
+            <span className="text-[8px] bg-indigo-50 border border-indigo-150 text-indigo-700 px-1 py-0.5 rounded-lg font-black">⭐ {progress.stars}</span>
+          )}
         </div>
+
 
         <button
           onClick={() => setIsCollapsed(false)}
@@ -160,6 +181,19 @@ export default function Navbar({
             <span>🏆</span>
             <span>{progress.level}</span>
           </div>
+
+          {/* Offline/Online Status Badge */}
+          {isOffline ? (
+            <div className="bg-emerald-100 border-2 border-emerald-300 rounded-xl sm:rounded-2xl px-1.5 sm:px-2.5 py-1.5 flex items-center gap-1 shadow-sm text-[9px] sm:text-[11px] font-black text-emerald-950 animate-pulse" title="الوضع غير المتصل مفعل بالكامل ومخزن محلياً!">
+              <WifiOff className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-emerald-700 animate-bounce" />
+              <span>أوفلاين 📡🎒</span>
+            </div>
+          ) : (
+            <div className="bg-sky-50 border-2 border-sky-200 rounded-xl sm:rounded-2xl px-1.5 sm:px-2.5 py-1.5 flex items-center gap-1 shadow-sm text-[9px] sm:text-[11px] font-black text-sky-900" title="أنت متصل بالإنترنت حالياً">
+              <Wifi className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-sky-600" />
+              <span className="hidden xs:inline">أونلاين 🌐</span>
+            </div>
+          )}
 
           {/* Points badge */}
           <div className="bg-amber-100 border-2 border-amber-250 rounded-xl sm:rounded-2xl px-1.5 sm:px-2.5 py-1 sm:py-1.5 flex items-center gap-0.5 sm:gap-1 shadow-sm text-[9px] sm:text-[11px] font-black text-amber-950" id="user-stars">

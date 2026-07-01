@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { 
   Heart, Flower2, Bug, Trees, Flame, Beaker, Sun, Globe,
-  BookOpen, Star, Trophy, ArrowLeft, Sparkles, ChevronLeft, ChevronRight, Play, Calendar, Download, AlertCircle, HelpCircle, Lock, Unlock, Eye
+  BookOpen, Star, Trophy, ArrowLeft, Sparkles, ChevronLeft, ChevronRight, Play, Calendar, Download, AlertCircle, HelpCircle, Lock, Unlock, Eye,
+  X, Compass, Award
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Unit, Lesson, UserProgress } from '../types';
 import { playSparkleSound, playFailureSound } from '../utils/audio';
 
@@ -88,6 +90,7 @@ export default function Dashboard({
 }: DashboardProps) {
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [consoleMessageIdx, setConsoleMessageIdx] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Parent math unlock puzzle state
   const [parentUnlockLesson, setParentUnlockLesson] = useState<Lesson | null>(null);
@@ -196,165 +199,70 @@ export default function Dashboard({
   }
 
   return (
-    <div className="p-1 sm:p-4 bg-[#FDFBF7] min-h-screen font-sans space-y-6" id="dashboard-root">
+    <div className="p-1 sm:p-4 bg-[#FDFBF7] min-h-screen font-sans space-y-6 relative" id="dashboard-root">
       
+      {/* Floating Action Button for the Sidebar */}
+      <div className="fixed bottom-6 right-6 z-40 hidden sm:block">
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="group bg-amber-400 hover:bg-amber-500 text-slate-900 p-3.5 px-4 rounded-full border-3 border-slate-900 shadow-[4px_4px_0px_#1E293B] active:scale-95 transition flex items-center gap-2 font-black text-xs cursor-pointer"
+        >
+          <Compass className="h-5 w-5 text-amber-950 group-hover:rotate-45 transition-transform duration-300" />
+          <span>لوحة الأنشطة والوسائل 🧭</span>
+        </button>
+      </div>
+
+      {/* Mobile Floating Button */}
+      <div className="fixed bottom-4 right-4 z-40 sm:hidden">
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="bg-amber-400 text-slate-900 p-3.5 rounded-full border-3 border-slate-900 shadow-[3px_3px_0px_#1E293B] active:scale-95 transition cursor-pointer flex items-center justify-center"
+        >
+          <Compass className="h-5 w-5 text-amber-950 animate-pulse" />
+        </button>
+      </div>
+
       {/* Centered Main Title mimicking "مسار الرحلة" */}
-      <div className="text-center space-y-1.5 py-2" dir="rtl">
+      <div className="text-center space-y-3 py-2" dir="rtl">
         <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">
           مسار الرحلة 🗺️
         </h2>
         <p className="text-xs text-slate-500 font-bold max-w-lg mx-auto leading-relaxed">
           تنقل على طول الخريطة الذهبية المتصلة بالدروس، وشاهد المحاكيات، وافتح الأوسمة مع المنهج السوداني المعتمد!
         </p>
+
+        {/* Prominent Sidebar Open Button */}
+        <div className="flex justify-center pt-1.5">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="group bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl border-3 border-slate-900 shadow-[4px_4px_0px_#1E293B] hover:shadow-[2px_2px_0px_#1E293B] hover:translate-x-0.5 hover:translate-y-0.5 transition duration-200 flex items-center gap-2.5 cursor-pointer relative"
+          >
+            <Compass className="h-5 w-5 text-amber-950 animate-spin" style={{ animationDuration: '8s' }} />
+            <span>🧭 افتح لوحة الأنشطة والتحديات اليومية</span>
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* TWO COLUMN GRID LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start" id="three-column-journey-grid">
+      {/* CENTEERED JOURNEY PATH */}
+      <div className="max-w-5xl mx-auto w-full space-y-6 animate-fade-in" id="three-column-journey-grid">
         
         {/* ==========================================
-            COLUMN 1: LEFT SIDEBAR (Engagement, Spaceship Console & Resources)
+            CENTER AREA (Continuous Serpentine Winding Path)
            ========================================== */}
-        <div className="col-span-1 lg:col-span-4 space-y-6 hidden lg:block" dir="rtl">
+        <div className="w-full space-y-6" dir="rtl">
           
-          <div className="bg-white rounded-[28px] border-4 border-rose-300 overflow-hidden shadow-md">
-            {/* Header */}
-            <div className="bg-[#E12A5E] text-white py-3 px-4 font-black text-center text-sm tracking-wide">
-              Engagement
-            </div>
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              {/* Daily Challenge Card */}
-              <div 
-                onClick={onOpenDailyChallenge}
-                className={`bg-[#FFFDF0] border-3 border-amber-300 rounded-[22px] p-4 text-center cursor-pointer relative overflow-hidden transition hover:scale-[1.02] shadow-sm ${
-                  isDailyChallengeSolved ? 'bg-emerald-50/50 border-emerald-300' : 'animate-pulse'
-                }`}
-              >
-                <div className="absolute top-2 left-2 bg-amber-200 text-amber-950 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full">
-                  0+ 👥
-                </div>
-                <span className="text-xs font-black text-amber-800 block text-right pr-1">
-                  ⭐ تحدي اليوم السريع!
-                </span>
-                
-                {/* 3D Gift Box Animation */}
-                <div className="my-3 flex justify-center">
-                  <span className="text-5xl filter drop-shadow animate-bounce inline-block">
-                    🎁
-                  </span>
-                </div>
-                
-                <p className="text-[10px] text-slate-500 font-bold leading-relaxed text-right" dir="rtl">
-                  {isDailyChallengeSolved 
-                    ? 'أحسنت يا بطل! لقد قمت بحل تحدي اليوم التفاعلي بنجاح وحصلت على الأوسمة والنقاط الذهبية!' 
-                    : 'هناك تحدي تفاعلي مشوق بانتظارك لحل لغز السلسلة الغذائية ومقاومة الكائنات الحية وحرارة الأجسام!'
-                  }
-                </p>
-              </div>
-
-              {/* Spaceship Control Console */}
-              <div className="bg-[#F1F3F5] rounded-[22px] border-3 border-slate-400 p-4 space-y-3.5 relative overflow-hidden text-right" dir="rtl">
-                <div className="flex items-center justify-between border-b border-slate-300 pb-1.5">
-                  <div className="flex gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                  </div>
-                  <span className="text-[9px] font-black text-slate-500">لوحة التحكم الفضائية</span>
-                </div>
-
-                <div className="bg-white p-2.5 rounded-xl border-2 border-slate-200 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 border-2 border-indigo-200 flex items-center justify-center text-xl shadow-inner shrink-0">
-                    {progress.studentAvatar || '👧'}
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9px] text-indigo-600 font-extrabold block">المستكشف:</span>
-                    <h4 className="text-xs font-black text-slate-800 leading-tight">
-                      {progress.studentName || 'ليان'}
-                    </h4>
-                    <span className="text-[9px] text-slate-450 block">📍 الولاية: {progress.studentCity || 'الخرطوم'}</span>
-                  </div>
-                </div>
-
-                <div className="bg-[#051E2E] p-3 rounded-xl border border-cyan-800/50 text-cyan-400 font-mono text-[10px] min-h-[85px] relative shadow-inner">
-                  <span className="text-[7px] text-cyan-600/60 absolute top-1 left-2">SYS_MSG_ACTIVE</span>
-                  <p className="leading-normal font-bold pt-1">
-                    {consoleMessages[consoleMessageIdx]}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-4 gap-1.5 text-center font-black">
-                  <button onClick={handlePrevUnit} className="bg-white hover:bg-slate-100 text-slate-700 p-1 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الوحدة السابقة">&lt;&lt;</button>
-                  <button onClick={handlePrevConsoleMessage} className="bg-white hover:bg-slate-100 text-slate-700 p-1 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الرسالة السابقة">&lt;</button>
-                  <button onClick={handleNextConsoleMessage} className="bg-white hover:bg-slate-100 text-slate-700 p-1 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الرسالة التالية">&gt;</button>
-                  <button onClick={handleNextUnit} className="bg-white hover:bg-slate-100 text-slate-700 p-1 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الوحدة التالية">&gt;&gt;</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Resources Card (Moved here) */}
-          <div className="bg-white rounded-[28px] border-4 border-emerald-300 overflow-hidden shadow-md">
-            {/* Header */}
-            <div className="bg-[#00A775] text-white py-3 px-4 font-black text-center text-sm tracking-wide">
-              Resources
-            </div>
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              
-              {/* Books block - pink style */}
-              <div 
-                onClick={() => alert("سيتم قريباً توفير كتب تفاعلية ممتعة بالكامل لطلابنا الحبيبيين!")}
-                className="bg-[#FFF0F3] border-3 border-[#F4A7B7] text-[#D0104C] rounded-[22px] p-4 text-center cursor-pointer hover:scale-[1.02] active:scale-95 transition shadow-sm space-y-2"
-              >
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-sm border border-[#F4A7B7]/40 animate-pulse">
-                  📚
-                </div>
-                <h4 className="font-black text-xs">كتب وملخصات ممتعة</h4>
-                <p className="text-[8px] text-[#D0104C]/75 font-bold">تصفح الكتيب المنهجي المقسم لدروس مبسطة مبهجة</p>
-              </div>
-
-              {/* Worksheets block - outline emerald style */}
-              <div 
-                onClick={onToggleWorksheets}
-                className="bg-white border-3 border-[#00A775] text-[#00A775] rounded-[22px] p-4 text-center cursor-pointer hover:scale-[1.02] active:scale-95 transition shadow-sm space-y-2"
-              >
-                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-sm border border-emerald-100">
-                  📝
-                </div>
-                <h4 className="font-black text-xs">أوراق عمل وبطاقات</h4>
-                <p className="text-[8px] text-[#00A775]/75 font-bold">صمم، حمل واطبع امتحاناتك وراجع تحصيلك الدراسي</p>
-              </div>
-
-              {/* Diagonal floating hexagonal/round badges */}
-              <div className="border-t border-slate-100 pt-4 space-y-2">
-                <span className="text-[9px] text-slate-450 font-extrabold block text-right">أوسمة شرف بخت الرضا المحققة:</span>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <div className="w-9 h-9 rounded-full bg-blue-100 border-2 border-blue-400 flex items-center justify-center text-base shadow hover:rotate-12 transition-transform cursor-pointer" title="الباحث الصغير">📘</div>
-                  <div className="w-9 h-9 rounded-full bg-yellow-100 border-2 border-yellow-400 flex items-center justify-center text-base shadow hover:rotate-12 transition-transform cursor-pointer animate-bounce" title="مستكشف الكون">🪐</div>
-                  <div className="w-9 h-9 rounded-full bg-rose-100 border-2 border-rose-400 flex items-center justify-center text-base shadow hover:rotate-12 transition-transform cursor-pointer" title="بطل المحاكيات">🔬</div>
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-base shadow hover:rotate-12 transition-transform cursor-pointer" title="عبقري الأحياء">🌿</div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-
-        {/* ==========================================
-            COLUMN 2: CENTER AREA (Continuous Serpentine Winding Path)
-           ========================================== */}
-        <div className="col-span-1 lg:col-span-8 space-y-6" dir="rtl">
-          
-          <div className="bg-[#FAF6EC] p-4 sm:p-6 rounded-[32px] border-4 border-[#E2B755] shadow-lg space-y-6 relative overflow-hidden">
+          <div className="bg-[#FAF6EC] p-5 sm:p-10 md:p-12 rounded-[36px] border-4 border-[#E2B755] shadow-xl space-y-8 relative overflow-hidden">
             
             {/* Title inside card */}
-            <div className="text-center space-y-1">
-              <h3 className="text-2xl font-black text-slate-850 tracking-tight">
-                {viewMode === 'units' ? 'رحلة استكشاف المنهج 🗺️' : 'رحلة العلوم 🚀'}
+            <div className="text-center space-y-2 max-w-2xl mx-auto">
+              <h3 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight flex items-center justify-center gap-2">
+                <span>{viewMode === 'units' ? 'رحلة استكشاف المنهج 🗺️' : 'رحلة العلوم 🚀'}</span>
               </h3>
-              <p className="text-[10px] text-slate-500 font-bold">
+              <p className="text-xs sm:text-sm text-slate-500 font-extrabold leading-relaxed">
                 {viewMode === 'units' 
                   ? 'اضغط على أي وحدة لفتح طريق الدروس والمغامرات التفصيلية!' 
                   : `دروس ومحاكيات وحدة: ${selectedUnit.title.split(': ')[0]}`
@@ -419,24 +327,37 @@ export default function Dashboard({
                         unit.id === 2 ? '🧪' : '💡';
                         
                       return (
-                        <div key={`unit-node-${unit.id}`} className="flex justify-center w-full min-h-[170px] items-center relative">
+                        <div key={`unit-node-${unit.id}`} className="flex justify-center w-full min-h-[190px] items-center relative">
                           
-                          {/* Floating illustrations next to nodes */}
-                          <div className="absolute left-[8%] md:left-[15%] text-4xl animate-bounce pointer-events-none filter drop-shadow">
+                          {/* Floating illustrations next to nodes - adjusted for extra width */}
+                          <div className="absolute left-[8%] sm:left-[15%] md:left-[22%] text-5xl animate-bounce pointer-events-none filter drop-shadow z-20">
                             {unitIllustration}
                           </div>
 
                           {/* Node Box */}
-                          <div className="bg-white border-3 border-slate-900 rounded-[20px] p-4 text-center shadow-[4px_4px_0px_#1E293B] max-w-[240px] w-full space-y-2 relative z-10">
-                            <span className="text-[8px] bg-indigo-100 text-indigo-900 font-extrabold px-2.5 py-0.5 rounded-full">
-                              {unit.title.split(': ')[0]}
-                            </span>
-                            <h4 className="text-xs font-black text-slate-800 leading-tight">
+                          <div className="bg-white border-3 border-slate-900 rounded-[24px] p-5 sm:p-6 text-center shadow-[6px_6px_0px_#1E293B] max-w-[340px] sm:max-w-[375px] w-full space-y-3 relative z-10 hover:scale-[1.01] transition-transform duration-200">
+                            <div className="flex justify-center">
+                              <span className="text-xs bg-indigo-50 text-indigo-950 font-black px-3.5 py-1 rounded-full border border-indigo-100 shadow-xs">
+                                {unit.title.split(': ')[0]}
+                              </span>
+                            </div>
+                            
+                            <h4 className="text-sm sm:text-base font-black text-slate-800 leading-snug">
                               {unit.title.split(': ')[1] || unit.title}
                             </h4>
                             
-                            <div className="text-[9px] text-slate-450 font-semibold">
-                              🏆 منجز: {completedCount} / {unit.lessons.length} ({pct}%)
+                            {/* Visual Progress Bar */}
+                            <div className="space-y-1.5 pt-1">
+                              <div className="flex justify-between items-center text-[10px] sm:text-xs text-slate-500 font-extrabold">
+                                <span>🏆 التقدم المحرز:</span>
+                                <span className="text-indigo-650 bg-indigo-50/70 px-1.5 py-0.5 rounded-md font-black">{completedCount} / {unit.lessons.length} ({pct}%)</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200 shadow-inner">
+                                <div 
+                                  className="bg-gradient-to-r from-emerald-400 to-[#05B382] h-full rounded-full transition-all duration-700" 
+                                  style={{ width: `${pct}%` }} 
+                                />
+                              </div>
                             </div>
 
                             {/* Action button inside Unit Node */}
@@ -445,9 +366,9 @@ export default function Dashboard({
                                 onSelectUnit(unit);
                                 setViewMode('lessons');
                               }}
-                              className="w-full bg-[#05B382] hover:bg-[#049E73] text-white font-black text-[10px] py-1.5 rounded-full border border-[#048F68] transition active:scale-95 shadow-md flex items-center justify-center gap-1 cursor-pointer"
+                              className="w-full bg-[#05B382] hover:bg-[#049E73] text-white font-black text-xs py-2.5 px-4 rounded-xl border-2 border-slate-950 transition active:scale-95 shadow-[2px_2px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer mt-2"
                             >
-                              <span>افتح الوحدة 🔓</span>
+                              <span>افتح الوحدة واستكشف الدروس 🔓</span>
                             </button>
                           </div>
                         </div>
@@ -467,61 +388,61 @@ export default function Dashboard({
                       const isSensesNode = lesson.id === 'u1-l6' || lesson.id === 'u1-l5';
 
                       return (
-                        <div key={`lesson-node-${lesson.id}`} className="flex justify-center w-full min-h-[190px] items-center relative">
+                        <div key={`lesson-node-${lesson.id}`} className="flex justify-center w-full min-h-[220px] items-center relative">
                           
-                          {/* Floating illustrations based on screenshot */}
+                          {/* Floating illustrations based on screenshot - pushed outwards for wider box */}
                           {isPlantNode && (
-                            <div className="absolute left-[5%] md:left-[12%] text-center pointer-events-none z-10">
-                              <div className="text-4xl animate-pulse">🌱</div>
-                              <div className="text-[7px] text-slate-500 font-bold bg-white/70 px-1 rounded">حاجة الكائنات</div>
+                            <div className="absolute left-[3%] sm:left-[10%] md:left-[18%] text-center pointer-events-none z-20">
+                              <div className="text-5xl animate-pulse">🌱</div>
+                              <div className="text-[9px] text-slate-600 font-extrabold bg-white/90 border border-slate-200 px-2 py-0.5 rounded-full shadow-xs">حاجة الكائنات</div>
                             </div>
                           )}
                           
                           {isSensesNode && (
-                            <div className="absolute right-[5%] md:right-[12%] flex flex-col items-center pointer-events-none z-10">
-                              <div className="text-4xl animate-bounce">👁️</div>
-                              <div className="text-2xl -mt-2 animate-pulse">👂</div>
+                            <div className="absolute right-[3%] sm:right-[10%] md:right-[18%] flex flex-col items-center pointer-events-none z-20">
+                              <div className="text-5xl animate-bounce">👁️</div>
+                              <div className="text-3xl -mt-2 animate-pulse">👂</div>
                             </div>
                           )}
 
                           {/* Node Box */}
-                          <div className={`bg-white border-3 border-slate-900 rounded-[22px] p-4 text-center shadow-[4px_4px_0px_#1E293B] max-w-[240px] w-full space-y-2 relative z-10 ${
+                          <div className={`bg-white border-3 border-slate-900 rounded-[24px] p-5 sm:p-6 text-center shadow-[6px_6px_0px_#1E293B] max-w-[340px] sm:max-w-[370px] w-full space-y-3 relative z-10 hover:scale-[1.01] transition-transform duration-200 ${
                             !isUnlocked ? 'opacity-70 grayscale bg-slate-50' : ''
                           }`}>
-                            <div className="flex justify-between items-center text-[8px] font-bold text-slate-450 border-b pb-1 mb-1">
-                              <span>{lesson.pagesRange} بالملخص</span>
-                              <span>الدرس {nodeIdx + 1}</span>
+                            <div className="flex justify-between items-center text-[10px] sm:text-xs font-bold text-slate-450 border-b pb-2">
+                              <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg font-bold">{lesson.pagesRange} بالملخص</span>
+                              <span className="text-indigo-650 bg-indigo-50 px-2 py-0.5 rounded-lg font-black">الدرس {nodeIdx + 1}</span>
                             </div>
 
-                            <div className="flex items-center justify-center gap-1.5">
-                              <span className="text-lg">{lessonEmoji}</span>
-                              <h4 className="text-xs font-black text-slate-800 leading-tight">
+                            <div className="flex items-center justify-center gap-2 pt-1">
+                              <span className="text-2xl filter drop-shadow animate-pulse">{lessonEmoji}</span>
+                              <h4 className="text-sm sm:text-base font-black text-slate-800 leading-snug">
                                 {lesson.title.split(': ')[1] || lesson.title}
                               </h4>
                             </div>
 
                             {/* Under active nodes, green button to start */}
-                            <div className="pt-1.5 space-y-1.5">
+                            <div className="pt-2 space-y-2">
                               <button 
                                 disabled={!isUnlocked}
                                 onClick={() => onSelectLesson(lesson)}
-                                className={`w-full py-2 rounded-full text-[10px] font-black transition active:scale-95 border-2 ${
+                                className={`w-full py-2.5 rounded-xl text-xs font-black transition-all duration-150 active:scale-95 border-2 ${
                                   !isUnlocked
                                     ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed shadow-none'
                                     : isCompleted
-                                      ? 'bg-emerald-550 hover:bg-emerald-600 text-white border-emerald-450 shadow-sm cursor-pointer'
-                                      : 'bg-[#05B382] hover:bg-[#049E73] text-white border-[#048F68] shadow-md cursor-pointer animate-pulse hover:animate-none'
+                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-slate-950 shadow-[2px_2px_0px_#000] cursor-pointer'
+                                      : 'bg-amber-400 hover:bg-amber-500 text-slate-950 border-slate-950 shadow-[2px_2px_0px_#000] cursor-pointer animate-pulse hover:animate-none'
                                 }`}
                               >
-                                {isCompleted ? "مراجعة 🔄" : "ابدأ درس اليوم 🚀"}
+                                {isCompleted ? "مراجعة الدرس المنجز 🔄" : "ابدأ رحلة الاستكشاف واللعب 🚀"}
                               </button>
 
                               {!isUnlocked && (
                                 <button
                                   onClick={() => handleOpenParentUnlock(lesson)}
-                                  className="w-full bg-slate-100 hover:bg-amber-55/90 text-amber-900 border-2 border-amber-300 hover:border-amber-400 py-1.5 rounded-full text-[9px] font-black transition active:scale-95 cursor-pointer shadow-xs flex items-center justify-center gap-1"
+                                  className="w-full bg-rose-50 hover:bg-rose-100 text-rose-900 border-2 border-rose-300 py-2 rounded-xl text-[10px] sm:text-xs font-black transition active:scale-95 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                                 >
-                                  👨‍👩‍👦 إذن ولي الأمر 🔐
+                                  👨‍👩‍👦 إذن ولي الأمر الذكي 🔐
                                 </button>
                               )}
                             </div>
@@ -538,12 +459,12 @@ export default function Dashboard({
                     return (
                       <div 
                         key={`lock-badge-${j}`} 
-                        className={`flex w-full min-h-[90px] items-center relative ${
-                          isRightSwing ? 'justify-end pr-[12%] md:pr-[18%]' : 'justify-start pl-[12%] md:pl-[18%]'
+                        className={`flex w-full min-h-[100px] items-center relative ${
+                          isRightSwing ? 'justify-end pr-[8%] sm:pr-[14%] md:pr-[22%]' : 'justify-start pl-[8%] sm:pl-[14%] md:pl-[22%]'
                         }`}
                       >
-                        <div className="bg-[#D2C8B5] border-2 border-[#B9AE98] text-[#5C5340] px-3 py-1.5 rounded-2xl flex flex-col items-center justify-center text-[8px] font-black w-24 h-14 shadow-sm z-10 rotate-3">
-                          <Lock className="h-3.5 w-3.5 text-amber-750 mb-0.5" />
+                        <div className="bg-[#D2C8B5] border-3 border-[#A89E88] text-[#4C4330] px-4 py-2.5 rounded-2xl flex flex-col items-center justify-center text-[10px] font-black w-28 h-16 shadow-md z-10 rotate-3 hover:rotate-0 transition-transform duration-200">
+                          <Lock className="h-4 w-4 text-amber-900 mb-1" />
                           <span>{badgeLabel}</span>
                         </div>
                       </div>
@@ -693,6 +614,199 @@ export default function Dashboard({
           </div>
         </div>
       )}
+
+      {/* ========================================================
+          SLIDING SIDEBAR (ANIME_PRESENCE DRAWER)
+         ======================================================== */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 cursor-pointer"
+            />
+
+            {/* Sliding Sidebar panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              className="fixed inset-y-0 right-0 h-full w-full sm:w-[420px] bg-[#FAF8F5] border-l-4 border-amber-400 shadow-2xl z-50 flex flex-col text-right"
+              dir="rtl"
+            >
+              {/* Sidebar Header */}
+              <header className="bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 p-4.5 flex items-center justify-between border-b-3 border-slate-900 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="bg-slate-900 p-2 rounded-xl text-amber-400">
+                    <Compass className="w-5 h-5 animate-spin" style={{ animationDuration: '10s' }} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-xs sm:text-sm tracking-tight">
+                      🧭 الاستكشاف والأنشطة
+                    </h3>
+                    <p className="text-[10px] text-slate-800 font-bold mt-0.5">
+                      تحديات، أوسمة، ووسائل تعليمية ممتعة
+                    </p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1.5 bg-slate-900 hover:bg-slate-800 rounded-xl transition text-white cursor-pointer"
+                  aria-label="إغلاق اللوحة الجانبية"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </header>
+
+              {/* Sidebar Content Area (Scrollable) */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                
+                {/* 1. Quick Stats Badge inside Sidebar */}
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-[22px] p-4 flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{progress.studentAvatar || '👧'}</span>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-800">{progress.studentName || 'ليان'}</h4>
+                      <p className="text-[9px] text-indigo-700 font-bold">المستكشف الذكي • {progress.studentCity || 'السودان'}</p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-[10px] font-black text-slate-600">المستوى: <span className="text-indigo-600 font-black">{progress.level}</span></div>
+                    <div className="text-[10px] font-black text-slate-600">النجوم: <span className="text-amber-600 font-black">⭐ {progress.stars}</span></div>
+                  </div>
+                </div>
+
+                {/* 2. Daily Challenge Card */}
+                <div 
+                  onClick={() => {
+                    setIsSidebarOpen(false); // Close sidebar and open challenge modal!
+                    onOpenDailyChallenge();
+                  }}
+                  className={`bg-white border-3 border-rose-350 rounded-[22px] p-4 text-center cursor-pointer relative overflow-hidden transition hover:scale-[1.02] shadow-sm ${
+                    isDailyChallengeSolved ? 'bg-emerald-50/55 border-emerald-305' : 'animate-pulse'
+                  }`}
+                >
+                  <div className="absolute top-2 left-2 bg-amber-200 text-amber-950 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full">
+                    0+ 👥
+                  </div>
+                  <span className="text-xs font-black text-[#E12A5E] block text-right pr-1">
+                    ⭐ تحدي اليوم السريع!
+                  </span>
+                  
+                  {/* 3D Gift Box Animation */}
+                  <div className="my-3 flex justify-center">
+                    <span className="text-5xl filter drop-shadow animate-bounce inline-block">
+                      🎁
+                    </span>
+                  </div>
+                  
+                  <p className="text-[10px] text-slate-500 font-bold leading-relaxed text-right" dir="rtl">
+                    {isDailyChallengeSolved 
+                      ? 'أحسنت يا بطل! لقد قمت بحل تحدي اليوم التفاعلي بنجاح وحصلت على الأوسمة والنقاط الذهبية!' 
+                      : 'هناك تحدي تفاعلي مشوق بانتظارك لحل لغز السلسلة الغذائية ومقاومة الكائنات الحية وحرارة الأجسام!'
+                    }
+                  </p>
+                </div>
+
+                {/* 3. Spaceship Control Console */}
+                <div className="bg-[#F1F3F5] rounded-[22px] border-3 border-slate-400 p-4 space-y-3.5 relative overflow-hidden text-right" dir="rtl">
+                  <div className="flex items-center justify-between border-b border-slate-300 pb-1.5">
+                    <div className="flex gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                    </div>
+                    <span className="text-[9px] font-black text-slate-500">لوحة التحكم الفضائية</span>
+                  </div>
+
+                  <div className="bg-[#051E2E] p-3 rounded-xl border border-cyan-800/50 text-cyan-400 font-mono text-[10px] min-h-[95px] relative shadow-inner">
+                    <span className="text-[7px] text-cyan-600/60 absolute top-1 left-2">SYS_MSG_ACTIVE</span>
+                    <p className="leading-normal font-bold pt-1">
+                      {consoleMessages[consoleMessageIdx]}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 text-center font-black">
+                    <button onClick={handlePrevUnit} className="bg-white hover:bg-slate-100 text-slate-700 p-1.5 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الوحدة السابقة">&lt;&lt;</button>
+                    <button onClick={handlePrevConsoleMessage} className="bg-white hover:bg-slate-100 text-slate-700 p-1.5 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الرسالة السابقة">&lt;</button>
+                    <button onClick={handleNextConsoleMessage} className="bg-white hover:bg-slate-100 text-slate-700 p-1.5 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الرسالة التالية">&gt;</button>
+                    <button onClick={handleNextUnit} className="bg-white hover:bg-slate-100 text-slate-700 p-1.5 rounded-lg text-[10px] border border-slate-300 transition active:scale-90 cursor-pointer" title="الوحدة التالية">&gt;&gt;</button>
+                  </div>
+                </div>
+
+                {/* 4. Resources Cards */}
+                <div className="bg-white rounded-[24px] border-3 border-emerald-300 overflow-hidden shadow-sm p-4 space-y-4">
+                  <h4 className="font-black text-slate-800 text-xs text-right border-b pb-1.5 border-emerald-100 flex items-center gap-1">
+                    <span>🎒 الوسائل والكتب المساعدة</span>
+                  </h4>
+
+                  {/* Books block - pink style */}
+                  <div 
+                    onClick={() => alert("سيتم قريباً توفير كتب تفاعلية ممتعة بالكامل لطلابنا الحبيبيين!")}
+                    className="bg-[#FFF0F3] border-3 border-[#F4A7B7] text-[#D0104C] rounded-[22px] p-4 text-center cursor-pointer hover:scale-[1.02] active:scale-95 transition shadow-sm space-y-2"
+                  >
+                    <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-sm border border-[#F4A7B7]/40 animate-pulse">
+                      📚
+                    </div>
+                    <h5 className="font-black text-xs">كتب وملخصات ممتعة</h5>
+                    <p className="text-[8px] text-[#D0104C]/75 font-bold">تصفح الكتيب المنهجي المقسم لدروس مبسطة مبهجة</p>
+                  </div>
+
+                  {/* Worksheets block - outline emerald style */}
+                  <div 
+                    onClick={() => {
+                      setIsSidebarOpen(false); // Close sidebar and open worksheets!
+                      onToggleWorksheets();
+                    }}
+                    className="bg-white border-3 border-[#00A775] text-[#00A775] rounded-[22px] p-4 text-center cursor-pointer hover:scale-[1.02] active:scale-95 transition shadow-sm space-y-2"
+                  >
+                    <div className="w-11 h-11 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-sm border border-emerald-100">
+                      📝
+                    </div>
+                    <h5 className="font-black text-xs">أوراق عمل وبطاقات</h5>
+                    <p className="text-[8px] text-[#00A775]/75 font-bold">صمم، حمل واطبع امتحاناتك وراجع تحصيلك الدراسي</p>
+                  </div>
+                </div>
+
+                {/* 5. Achievements Badge Collection */}
+                <div className="bg-white rounded-[24px] border-3 border-indigo-200 p-4 space-y-3 shadow-sm">
+                  <span className="text-[9px] text-indigo-750 font-extrabold block text-right">🏆 أوسمة شرف بخت الرضا المحققة:</span>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="p-1.5 rounded-xl bg-blue-50 border border-blue-200 flex flex-col items-center justify-center gap-1 hover:rotate-6 transition cursor-pointer" title="الباحث الصغير">
+                      <span className="text-xl">📘</span>
+                      <span className="text-[7px] font-bold text-slate-500">الباحث الصغير</span>
+                    </div>
+                    <div className="p-1.5 rounded-xl bg-yellow-50 border border-yellow-200 flex flex-col items-center justify-center gap-1 hover:rotate-6 transition cursor-pointer animate-bounce" title="مستكشف الكون">
+                      <span className="text-xl">🪐</span>
+                      <span className="text-[7px] font-bold text-slate-500">مستكشف الكون</span>
+                    </div>
+                    <div className="p-1.5 rounded-xl bg-rose-50 border border-rose-200 flex flex-col items-center justify-center gap-1 hover:rotate-6 transition cursor-pointer" title="بطل المحاكيات">
+                      <span className="text-xl">🔬</span>
+                      <span className="text-[7px] font-bold text-slate-500">بطل المحاكيات</span>
+                    </div>
+                    <div className="p-1.5 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col items-center justify-center gap-1 hover:rotate-6 transition cursor-pointer" title="عبقري الأحياء">
+                      <span className="text-xl">🌿</span>
+                      <span className="text-[7px] font-bold text-slate-500">عبقري الأحياء</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              
+              {/* Sidebar Footer */}
+              <footer className="p-4 bg-slate-50 border-t border-slate-200 text-center text-[9px] text-slate-400 font-bold shrink-0">
+                منهج العلوم المعتمد للصف الثالث الابتدائي 🇸🇩
+              </footer>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </div>
   );
