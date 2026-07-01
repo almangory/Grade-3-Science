@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, Trophy, Star, GraduationCap, Volume2, VolumeX, MessageSquare, Settings, Eye, EyeOff, Wifi, WifiOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles, Trophy, Star, GraduationCap, Volume2, VolumeX, MessageSquare, Settings, Eye, EyeOff, Wifi, WifiOff, Sun, Moon } from 'lucide-react';
 import { UserProgress } from '../types';
-import { isMuted, setMuted } from '../utils/audio';
+import { isMuted, setMuted, playSparkleSound } from '../utils/audio';
 
 interface NavbarProps {
   progress: UserProgress;
@@ -26,6 +26,12 @@ export default function Navbar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
+  // Screen Wake Lock states and refs
+  const [wakeLockEnabled, setWakeLockEnabled] = useState(true);
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+  const wakeLockRef = useRef<any>(null);
+
+  // Sync offline status in real time
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
@@ -36,6 +42,73 @@ export default function Navbar({
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Request Wake Lock
+  const requestWakeLock = async () => {
+    if ('wakeLock' in navigator) {
+      try {
+        if (wakeLockRef.current) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+        }
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        setWakeLockActive(true);
+        console.log('[Wake Lock] Screen Wake Lock is active');
+        
+        wakeLockRef.current.addEventListener('release', () => {
+          setWakeLockActive(false);
+        });
+      } catch (err) {
+        console.warn('[Wake Lock] Could not request screen wake lock:', err);
+        setWakeLockActive(false);
+      }
+    }
+  };
+
+  // Release Wake Lock
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      } catch (err) {
+        console.error('[Wake Lock] Error releasing wake lock:', err);
+      }
+    }
+    setWakeLockActive(false);
+  };
+
+  // Effect to request or release wake lock based on enable state and visibility
+  useEffect(() => {
+    if (wakeLockEnabled) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+  }, [wakeLockEnabled]);
+
+  // Effect to handle visibility changes (re-acquire if tab was hidden and is visible again)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && wakeLockEnabled) {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [wakeLockEnabled]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release().catch(() => {});
+      }
     };
   }, []);
 
@@ -174,6 +247,36 @@ export default function Navbar({
             id="btn-sound-toggle"
           >
             {muted ? <VolumeX className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> : <Volume2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />}
+          </button>
+
+          {/* Screen Wake Lock Toggle (Always On) */}
+          <button
+            onClick={() => {
+              const nextVal = !wakeLockEnabled;
+              setWakeLockEnabled(nextVal);
+              if (nextVal) {
+                playSparkleSound();
+              }
+            }}
+            className={`p-1 sm:p-1.5 px-2 rounded-xl sm:rounded-2xl border-2 transition duration-200 flex items-center justify-center gap-1 cursor-pointer hover:scale-105 active:scale-95 text-[9px] sm:text-[11px] font-black ${
+              wakeLockEnabled 
+                ? 'bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-150 animate-pulse' 
+                : 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-150'
+            }`}
+            title={wakeLockEnabled ? "ميزة إبقاء الشاشة مضيئة مفعلة (اضغط لتعطيل الميزة وتوفير البطارية)" : "اضغط لإبقاء الشاشة مضيئة دائماً دون انطفاء أثناء الدراسة"}
+            id="btn-wake-lock-toggle"
+          >
+            {wakeLockEnabled ? (
+              <>
+                <Sun className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-amber-600" />
+                <span className="hidden sm:inline-block">الشاشة مضيئة 💡</span>
+              </>
+            ) : (
+              <>
+                <Moon className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-slate-400" />
+                <span className="hidden sm:inline-block">الشاشة تلقائية 💤</span>
+              </>
+            )}
           </button>
 
           {/* Level badge */}
