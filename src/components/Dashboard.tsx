@@ -91,62 +91,6 @@ export default function Dashboard({
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [consoleMessageIdx, setConsoleMessageIdx] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Parent math unlock puzzle state
-  const [parentUnlockLesson, setParentUnlockLesson] = useState<Lesson | null>(null);
-  const [mathProblem, setMathProblem] = useState<{ equation: string; answer: number }>({ equation: '', answer: 0 });
-  const [parentAnswerInput, setParentAnswerInput] = useState('');
-  const [parentError, setParentError] = useState('');
-
-  const generateMathProblem = () => {
-    const isMultiStep = Math.random() > 0.5;
-    let equation = '';
-    let answer = 0;
-    if (isMultiStep) {
-      const n1 = Math.floor(Math.random() * 6) + 4; // 4 - 9
-      const n2 = Math.floor(Math.random() * 6) + 4; // 4 - 9
-      const n3 = Math.floor(Math.random() * 15) + 5; // 5 - 19
-      equation = `${n1} × ${n2} + ${n3}`;
-      answer = n1 * n2 + n3;
-    } else {
-      const n1 = Math.floor(Math.random() * 30) + 20; // 20 - 49
-      const n2 = Math.floor(Math.random() * 30) + 20; // 20 - 49
-      equation = `${n1} + ${n2}`;
-      answer = n1 + n2;
-    }
-    setMathProblem({ equation, answer });
-    setParentAnswerInput('');
-    setParentError('');
-  };
-
-  const handleOpenParentUnlock = (lesson: Lesson) => {
-    setParentUnlockLesson(lesson);
-    generateMathProblem();
-  };
-
-  const handleVerifyParentUnlock = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = parseInt(parentAnswerInput.trim());
-    if (isNaN(parsed)) {
-      setParentError("الرجاء إدخال رقم صحيح يا ولي الأمر.");
-      playFailureSound();
-      return;
-    }
-    if (parsed === mathProblem.answer) {
-      playSparkleSound();
-      if (onUnlockLesson && parentUnlockLesson) {
-        onUnlockLesson(parentUnlockLesson.id);
-      }
-      // Launch lesson directly for convenience!
-      if (parentUnlockLesson) {
-        onSelectLesson(parentUnlockLesson);
-      }
-      setParentUnlockLesson(null);
-    } else {
-      playFailureSound();
-      setParentError("الناتج غير صحيح! حاول مرة أخرى للتأكيد.");
-    }
-  };
   
   const [localViewMode, setLocalViewMode] = useState<'units' | 'lessons'>('units');
   const viewMode = propViewMode !== undefined ? propViewMode : localViewMode;
@@ -190,11 +134,11 @@ export default function Dashboard({
   const roadItems = [];
   if (viewMode === 'units') {
     for (let i = 0; i < roadItemsCount; i++) {
-      roadItems.push({ type: i % 2 === 0 ? 'node' : 'lock', index: Math.floor(i / 2) });
+      roadItems.push({ type: i % 2 === 0 ? 'node' : 'checkpoint', index: Math.floor(i / 2) });
     }
   } else {
     for (let i = 0; i < roadItemsCount; i++) {
-      roadItems.push({ type: i % 2 === 0 ? 'node' : 'lock', index: Math.floor(i / 2) });
+      roadItems.push({ type: i % 2 === 0 ? 'node' : 'checkpoint', index: Math.floor(i / 2) });
     }
   }
 
@@ -228,7 +172,7 @@ export default function Dashboard({
           مسار الرحلة 🗺️
         </h2>
         <p className="text-xs text-slate-500 font-bold max-w-lg mx-auto leading-relaxed">
-          تنقل على طول الخريطة الذهبية المتصلة بالدروس، وشاهد المحاكيات، وافتح الأوسمة مع المنهج السوداني المعتمد!
+          تنقل بحرية تامة بين كافة الوحدات والدروس المفتوحة، وشاهد المحاكيات، وافتح الأوسمة مع المنهج السوداني المعتمد!
         </p>
 
         {/* Prominent Sidebar Open Button */}
@@ -377,10 +321,6 @@ export default function Dashboard({
                       // viewMode === 'lessons'
                       const lesson = selectedUnit.lessons[nodeIdx];
                       const isCompleted = progress.completedLessons.includes(lesson.id);
-                      const isParentUnlocked = progress.parentUnlockedLessons?.includes(lesson.id);
-                      const isFirstUncompleted = !isCompleted && 
-                        (nodeIdx === 0 || progress.completedLessons.includes(selectedUnit.lessons[nodeIdx - 1]?.id));
-                      const isUnlocked = isCompleted || isFirstUncompleted || nodeIdx === 0 || isParentUnlocked;
                       const lessonEmoji = getLessonEmoji(lesson.id);
                       
                       // Floating sensory or plant illustrations based on image
@@ -406,9 +346,7 @@ export default function Dashboard({
                           )}
 
                           {/* Node Box */}
-                          <div className={`bg-white border-3 border-slate-900 rounded-[24px] p-5 sm:p-6 text-center shadow-[6px_6px_0px_#1E293B] max-w-[340px] sm:max-w-[370px] w-full space-y-3 relative z-10 hover:scale-[1.01] transition-transform duration-200 ${
-                            !isUnlocked ? 'opacity-70 grayscale bg-slate-50' : ''
-                          }`}>
+                          <div className="bg-white border-3 border-slate-900 rounded-[24px] p-5 sm:p-6 text-center shadow-[6px_6px_0px_#1E293B] max-w-[340px] sm:max-w-[370px] w-full space-y-3 relative z-10 hover:scale-[1.01] transition-transform duration-200">
                             <div className="flex justify-between items-center text-[10px] sm:text-xs font-bold text-slate-450 border-b pb-2">
                               <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg font-bold">{lesson.pagesRange} بالملخص</span>
                               <span className="text-indigo-650 bg-indigo-50 px-2 py-0.5 rounded-lg font-black">الدرس {nodeIdx + 1}</span>
@@ -421,30 +359,18 @@ export default function Dashboard({
                               </h4>
                             </div>
 
-                            {/* Under active nodes, green button to start */}
-                            <div className="pt-2 space-y-2">
+                            {/* Under active nodes, button to start or review */}
+                            <div className="pt-2">
                               <button 
-                                disabled={!isUnlocked}
                                 onClick={() => onSelectLesson(lesson)}
-                                className={`w-full py-2.5 rounded-xl text-xs font-black transition-all duration-150 active:scale-95 border-2 ${
-                                  !isUnlocked
-                                    ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed shadow-none'
-                                    : isCompleted
-                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-slate-950 shadow-[2px_2px_0px_#000] cursor-pointer'
-                                      : 'bg-amber-400 hover:bg-amber-500 text-slate-950 border-slate-950 shadow-[2px_2px_0px_#000] cursor-pointer animate-pulse hover:animate-none'
+                                className={`w-full py-2.5 rounded-xl text-xs font-black transition-all duration-150 active:scale-95 border-2 cursor-pointer shadow-[2px_2px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-0.5 ${
+                                  isCompleted
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-slate-950'
+                                    : 'bg-amber-400 hover:bg-amber-500 text-slate-950 border-slate-950 animate-pulse hover:animate-none'
                                 }`}
                               >
                                 {isCompleted ? "مراجعة الدرس المنجز 🔄" : "ابدأ رحلة الاستكشاف واللعب 🚀"}
                               </button>
-
-                              {!isUnlocked && (
-                                <button
-                                  onClick={() => handleOpenParentUnlock(lesson)}
-                                  className="w-full bg-rose-50 hover:bg-rose-100 text-rose-900 border-2 border-rose-300 py-2 rounded-xl text-[10px] sm:text-xs font-black transition active:scale-95 cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
-                                >
-                                  👨‍👩‍👦 إذن ولي الأمر الذكي 🔐
-                                </button>
-                              )}
                             </div>
                           </div>
 
@@ -452,20 +378,20 @@ export default function Dashboard({
                       );
                     }
                   } else {
-                    // If it is odd, it's a connecting lock/checkpoint badge on the S-curves
+                    // If it is odd, it's an open milestone badge on the S-curves
                     const isRightSwing = j % 4 === 1;
-                    const badgeLabel = viewMode === 'units' ? 'بوابة المنهج' : 'الملخص الدراسي';
+                    const badgeLabel = viewMode === 'units' ? 'محطة تعليمية' : 'ملخص تفاعلي';
                     
                     return (
                       <div 
-                        key={`lock-badge-${j}`} 
+                        key={`checkpoint-badge-${j}`} 
                         className={`flex w-full min-h-[100px] items-center relative ${
                           isRightSwing ? 'justify-end pr-[8%] sm:pr-[14%] md:pr-[22%]' : 'justify-start pl-[8%] sm:pl-[14%] md:pl-[22%]'
                         }`}
                       >
-                        <div className="bg-[#D2C8B5] border-3 border-[#A89E88] text-[#4C4330] px-4 py-2.5 rounded-2xl flex flex-col items-center justify-center text-[10px] font-black w-28 h-16 shadow-md z-10 rotate-3 hover:rotate-0 transition-transform duration-200">
-                          <Lock className="h-4 w-4 text-amber-900 mb-1" />
-                          <span>{badgeLabel}</span>
+                        <div className="bg-gradient-to-br from-[#FFF9E6] to-[#F7ECD2] border-3 border-[#E2B755] text-amber-950 px-4 py-2.5 rounded-2xl flex flex-col items-center justify-center text-[10px] font-black w-28 h-16 shadow-md z-10 rotate-3 hover:rotate-0 transition-transform duration-200">
+                          <Sparkles className="h-4 w-4 text-amber-600 mb-1 animate-pulse" />
+                          <span>{badgeLabel} ✨</span>
                         </div>
                       </div>
                     );
@@ -535,81 +461,6 @@ export default function Dashboard({
                   title="شرح مادة العلوم المنهج السوداني"
                 />
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          PARENT MATH UNLOCK MODAL
-         ======================================================== */}
-      {parentUnlockLesson && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={() => setParentUnlockLesson(null)}>
-          <div className="bg-white rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl w-full max-w-md relative flex flex-col text-slate-850" onClick={(e) => e.stopPropagation()} dir="rtl">
-            <div className="bg-amber-100 p-4 flex justify-between items-center border-b border-amber-200">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">👨‍👩‍👦</span>
-                <span className="font-extrabold text-slate-800 text-xs sm:text-sm">بوابة ولي الأمر للتأكيد 🔐</span>
-              </div>
-              <button 
-                onClick={() => setParentUnlockLesson(null)}
-                className="bg-slate-250 hover:bg-slate-300 text-slate-700 font-extrabold text-[11px] px-3 py-1.5 rounded-full cursor-pointer transition active:scale-95 border border-slate-300"
-              >
-                إلغاء ✖
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-center">
-              <div className="space-y-1">
-                <h4 className="font-black text-slate-800 text-xs sm:text-sm">هل تود فتح هذا الدرس لبطلك الصغير؟</h4>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
-                  الدرس: <span className="text-amber-800 font-black">{parentUnlockLesson.title}</span>
-                </p>
-              </div>
-
-              <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl space-y-2">
-                <span className="text-[10px] text-amber-850 font-black block">مسألة حسابية سريعة لتأكيد إذن الوالدين:</span>
-                <div className="text-2xl font-black text-slate-800 tracking-wider">
-                  {mathProblem.equation} = ؟
-                </div>
-                <span className="text-[9px] text-slate-400 font-bold block">(تلميح ولي الأمر: يرجى كتابة الناتج بالأرقام لتجاوز القفل التلقائي)</span>
-              </div>
-
-              <form onSubmit={handleVerifyParentUnlock} className="space-y-3">
-                <div>
-                  <input
-                    type="number"
-                    value={parentAnswerInput}
-                    onChange={(e) => {
-                      setParentAnswerInput(e.target.value);
-                      setParentError('');
-                    }}
-                    placeholder="اكتب الإجابة هنا..."
-                    className="w-full text-center border-2 border-slate-300 p-2.5 rounded-xl font-extrabold text-slate-800 text-base focus:border-amber-400 focus:outline-none transition"
-                    autoFocus
-                  />
-                  {parentError && (
-                    <p className="text-[10px] text-rose-600 font-bold mt-1.5">{parentError}</p>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs py-3 rounded-xl border-2 border-amber-400 cursor-pointer shadow-md transition active:scale-95"
-                  >
-                    تأكيد الفتح والتشغيل 🔓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={generateMathProblem}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 rounded-xl border border-slate-300 cursor-pointer transition active:scale-95"
-                    title="تغيير المسألة"
-                  >
-                    🔄 مسألة أخرى
-                  </button>
-                </div>
-              </form>
             </div>
           </div>
         </div>
