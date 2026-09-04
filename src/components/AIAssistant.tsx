@@ -163,26 +163,52 @@ ${(bestMatch as any).detail ? `💡 **معلومة مفصلة إضافية:**\n"
     }
 
     try {
-      const response = await fetch('/api/tutor', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
-          currentContext: currentContext || "المنهج العام للعلوم للصف الثالث الابتدائي"
-        })
-      });
+      let data: any = null;
 
-      if (!response.ok) {
+      // 1. الاتصال المباشر بمعلم المناهج السودانية السحابي 24/7 (بدون الحاجة لمفاتيح API)
+      try {
+        const response = await fetch('https://local-ai-arsenal.pages.dev/api/mentor/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: updatedMessages.slice(-6).map(m => ({
+              role: m.role === 'student' ? 'user' : 'assistant',
+              content: m.content
+            })),
+            stage: 'general'
+          })
+        });
+        if (response.ok) {
+          data = await response.json();
+        }
+      } catch (cloudErr) {
+        console.warn("Cloud mentor fallback:", cloudErr);
+      }
+
+      // 2. محاولة بديلة عبر الخادم المحلي إذا تعثرت السحابة
+      if (!data) {
+        const response = await fetch('/api/tutor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+            currentContext: currentContext || "المنهج العام للعلوم للصف الثالث الابتدائي"
+          })
+        });
+        if (response.ok) {
+          data = await response.json();
+        }
+      }
+
+      if (!data || (!data.reply && !data.text)) {
         throw new Error("فشل الاتصال بالمعلم الافتراضي.");
       }
 
-      const data = await response.json();
       const tutorMsg: Message = {
         id: `tutor-${Date.now()}`,
         role: 'tutor',
-        content: data.text,
+        content: data.reply || data.text,
         timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
       };
 
